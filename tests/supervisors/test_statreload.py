@@ -7,6 +7,7 @@ import pytest
 
 from uvicorn.config import Config
 from uvicorn.supervisors import StatReload
+from uvicorn.supervisors import Watchman
 
 
 def run(sockets):
@@ -47,3 +48,17 @@ def test_should_reload(tmpdir):
         reloader.shutdown()
     finally:
         os.chdir(working_dir)
+
+
+def test_watchman():
+    """
+    A basic sanity check.
+
+    Simply run the reloader against a no-op server, and signal for it to
+    quit immediately.
+    """
+    config = Config(app=None, reload=True)
+    if Watchman.available():
+        reloader = Watchman(config, target=run, sockets=[])
+        reloader.signal_handler(sig=signal.SIGINT, frame=None)
+        reloader.run()

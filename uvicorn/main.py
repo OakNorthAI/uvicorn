@@ -25,13 +25,14 @@ from uvicorn.config import (
     WS_PROTOCOLS,
     Config,
 )
-from uvicorn.supervisors import Multiprocess, StatReload
+from uvicorn.supervisors import Multiprocess, StatReload, Watchman
 
 LEVEL_CHOICES = click.Choice(LOG_LEVELS.keys())
 HTTP_CHOICES = click.Choice(HTTP_PROTOCOLS.keys())
 WS_CHOICES = click.Choice(WS_PROTOCOLS.keys())
 LIFESPAN_CHOICES = click.Choice(LIFESPAN.keys())
-LOOP_CHOICES = click.Choice([key for key in LOOP_SETUPS.keys() if key != "none"])
+LOOP_CHOICES = click.Choice(
+    [key for key in LOOP_SETUPS.keys() if key != "none"])
 INTERFACE_CHOICES = click.Choice(INTERFACES)
 
 HANDLED_SIGNALS = (
@@ -344,7 +345,8 @@ def run(app, **kwargs):
 
     if config.should_reload:
         sock = config.bind_socket()
-        supervisor = StatReload(config, target=server.run, sockets=[sock])
+        Reloader = Watchman if Watchman.available() else StatReload
+        supervisor = Reloader(config, target=server.run, sockets=[sock])
         supervisor.run()
     elif config.workers > 1:
         sock = config.bind_socket()
@@ -393,8 +395,10 @@ class Server:
         self.install_signal_handlers()
 
         message = "Started server process [%d]"
-        color_message = "Started server process [" + click.style("%d", fg="cyan") + "]"
-        logger.info(message, process_id, extra={"color_message": color_message})
+        color_message = "Started server process [" + \
+            click.style("%d", fg="cyan") + "]"
+        logger.info(message, process_id, extra={
+                    "color_message": color_message})
 
         await self.startup(sockets=sockets)
         if self.should_exit:
@@ -403,7 +407,8 @@ class Server:
         await self.shutdown(sockets=sockets)
 
         message = "Finished server process [%d]"
-        color_message = "Finished server process [" + click.style("%d", fg="cyan") + "]"
+        color_message = "Finished server process [" + \
+            click.style("%d", fg="cyan") + "]"
         logger.info(
             "Finished server process [%d]",
             process_id,

@@ -6,6 +6,7 @@ httptools
 uvloop>=0.14.0
 websockets==8.*
 wsproto==0.13.*
+pywatchman>=1.4.1
 
 # Testing
 autoflake
