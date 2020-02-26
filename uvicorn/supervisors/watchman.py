@@ -1,7 +1,7 @@
 import logging
 import functools
 
-from .reloaderbase import ReloaderBase
+from .statreload import StatReload
 from uvicorn.config import Config
 
 logger = logging.getLogger("uvicorn.warning")
@@ -25,22 +25,27 @@ def client():
 client.holder = None
 
 
-class Watchman(ReloaderBase):
+class Watchman(StatReload):
     def __init__(self, config, target, sockets):
         super().__init__(config, target, sockets)
         logger.info("Use Watchman.")
+        self.fallback = False
 
-    def watch_and_reload(self):
+    def should_restart(self):
+        if self.fallback:
+            return super().should_restart()
+
         try:
             client().receive()
             logger.warning("Watchman detected file change, about to restart")
-            self.restart()
+            return True
         except pywatchman.SocketTimeout:
-            pass
+            return False
         except pywatchman.WatchmanError as ex:
-            logger.error("Watchman error: %s, checking server status.", ex)
-            # when watchman is failed, retart server fallback to statreload
-            self.restart()
+            self.fallback = True
+            logger.error(
+                "Watchman error: %s, checking server status. Fallback to StatReload", ex
+            )
 
     @classmethod
     def available(cls) -> bool:
