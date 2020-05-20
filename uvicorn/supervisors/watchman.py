@@ -18,7 +18,7 @@ def client():
     if client.holder is None:
         if pywatchman is None:
             return None
-        client.holder = pywatchman.client(timeout=5.0)
+        client.holder = pywatchman.client(timeout=20.0)
     return client.holder
 
 
