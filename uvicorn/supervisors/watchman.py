@@ -73,11 +73,11 @@ class Watchman(StatReload):
 
     def _watch(self, root):
         name = "uvicorn-watch-{}-[{}]".format(self.config.app or "", str(root))
-        result = client().query("watch-project", root)
+        result = client().query("watch", root)
 
         if "warning" in result:
             logger.warning("Watchman warning: %s", result["warning"])
-        logger.warning("Watchman watch-project result: %s", result)
+        logger.warning("Watchman watch result: %s", result)
 
         query = {
             "expression": ["allof", ["type", "f"], ["not", "empty"], ["suffix", "py"]],
