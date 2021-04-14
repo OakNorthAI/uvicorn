@@ -2,6 +2,7 @@ import typing
 
 from uvicorn.supervisors.basereload import BaseReload
 from uvicorn.supervisors.multiprocess import Multiprocess
+from uvicorn.supervisors.watchmanreload import WatchmanReload
 
 if typing.TYPE_CHECKING:
     ChangeReload: typing.Type[BaseReload]  # pragma: no cover
@@ -11,4 +12,4 @@ else:
     except ImportError:  # pragma: no cover
         from uvicorn.supervisors.statreload import StatReload as ChangeReload
 
-__all__ = ["Multiprocess", "ChangeReload"]
+__all__ = ["Multiprocess", "ChangeReload", "WatchmanReload"]

@@ -5,12 +5,13 @@ from time import sleep
 import pytest
 
 from uvicorn.config import Config
+from uvicorn.supervisors import WatchmanReload
 from uvicorn.supervisors.basereload import BaseReload
 from uvicorn.supervisors.statreload import StatReload
 from uvicorn.supervisors.watchgodreload import WatchGodReload
 
 
-@pytest.mark.parametrize("reloader_class", [StatReload, WatchGodReload])
+@pytest.mark.parametrize("reloader_class", [StatReload, WatchGodReload, WatchmanReload])
 class TestBaseReload:
     tmp_path: Path
 
