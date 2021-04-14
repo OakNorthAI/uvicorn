@@ -19,7 +19,7 @@ from uvicorn.config import (
     Config,
 )
 from uvicorn.server import Server, ServerState  # noqa: F401  # Used to be defined here.
-from uvicorn.supervisors import ChangeReload, Multiprocess
+from uvicorn.supervisors import ChangeReload, Multiprocess, WatchmanReload
 
 LEVEL_CHOICES = click.Choice(LOG_LEVELS.keys())
 HTTP_CHOICES = click.Choice(HTTP_PROTOCOLS.keys())
@@ -84,6 +84,12 @@ def print_version(ctx, param, value):
     show_default=True,
     help="Delay between previous and next check if application needs to be."
     " Defaults to 0.25s.",
+)
+@click.option(
+    "--reload-with-watchman",
+    default=False,
+    help="Use watchman to check monitor the file change. "
+    "Consume less resource than reload looping.",
 )
 @click.option(
     "--workers",
@@ -295,6 +301,7 @@ def main(
     reload: bool,
     reload_dirs: typing.List[str],
     reload_delay: float,
+    reload_with_watchman: bool,
     workers: int,
     env_file: str,
     log_config: str,
@@ -340,6 +347,7 @@ def main(
         "reload": reload,
         "reload_dirs": reload_dirs if reload_dirs else None,
         "reload_delay": reload_delay,
+        "reload_with_watchman": reload_with_watchman,
         "workers": workers,
         "proxy_headers": proxy_headers,
         "forwarded_allow_ips": forwarded_allow_ips,
@@ -376,7 +384,17 @@ def run(app, **kwargs):
 
     if config.should_reload:
         sock = config.bind_socket()
-        supervisor = ChangeReload(config, target=server.run, sockets=[sock])
+        use_watchman = config.reload_with_watchman and WatchmanReload.available()
+        watchman_unavailable = (
+            config.reload_with_watchman and not WatchmanReload.available()
+        )
+        if watchman_unavailable:
+            logger = logging.getLogger("uvicorn.error")
+            logger.warning(
+                "Watchman service is unavailable fallback to other reloader."
+            )
+        Reloader = WatchmanReload if use_watchman else ChangeReload
+        supervisor = Reloader(config, target=server.run, sockets=[sock])
         supervisor.run()
     elif config.workers > 1:
         sock = config.bind_socket()

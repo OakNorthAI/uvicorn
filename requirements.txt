@@ -2,6 +2,7 @@
 
 # Explicit optionals
 wsproto==1.0.*
+pywatchman>=1.4.1
 
 # Packaging
 twine
