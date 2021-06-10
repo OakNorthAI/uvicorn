@@ -14,8 +14,9 @@ class watchman:
         if not cls.__client:
             import pywatchman
 
-            cls.__client = pywatchman.client(timeout=20.0)
+            cls.__client = pywatchman.client(timeout=0.2)
             cls.__pywatchman = pywatchman
+
         return cls.__client
 
     def __init__(self):
@@ -23,6 +24,7 @@ class watchman:
 
     @staticmethod
     def file_changed():
+
         try:
             watchman().receive()
             logger.info("Watchman detected file change, about to restart")
@@ -46,6 +48,7 @@ class WatchmanReload(BaseReload):
 
     @classmethod
     def available(cls) -> bool:
+
         try:
             watchman().capabilityCheck()
             logger.info("Watchman is available")
@@ -75,7 +78,7 @@ class WatchmanReload(BaseReload):
         logger.info("Watchman watch result: %s", result)
 
         query = {
-            "expression": ["allof", ["type", "f"], ["not", "empty"], ["suffix", "py"]],
+            "expression": ["allof", ["type", "f"], ["suffix", "py"]],
             "fields": ["name"],
             "since": self._get_clock(root),
             "dedup_results": True,
