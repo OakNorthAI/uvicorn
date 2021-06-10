@@ -137,7 +137,7 @@ class Config:
         reload=False,
         reload_dirs=None,
         reload_delay=None,
-        reload_with_watchman=False,
+        reload_with_watchman=True,
         workers=None,
         proxy_headers=True,
         forwarded_allow_ips=None,
