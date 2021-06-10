@@ -88,7 +88,7 @@ def print_version(ctx: click.Context, param: click.Parameter, value: bool) -> No
 )
 @click.option(
     "--reload-with-watchman",
-    default=False,
+    default=True,
     help="Use watchman to check monitor the file change. "
     "Consume less resource than reload looping.",
 )
